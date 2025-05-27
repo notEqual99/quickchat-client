@@ -1,70 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.cdnfonts.com/css/source-code-pro');
+
 :root {
-	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-	line-height: 1.5;
-	font-weight: 400;
-
-	color: #222;
-	background-color: #ffffff;
-
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	-webkit-text-size-adjust: 100%;
+  --neon-green: #39FF14;
+  --terminal-bg: #000000;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-	margin: 0;
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--terminal-bg);
+  color: var(--neon-green);
+  font-family: 'Source Code Pro', monospace;
+  line-height: 1.5;
 }
 
 #app {
-	display: flex;
-	flex-direction: column;
-	min-height: 100vh;
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--terminal-bg);
 }
 
 header {
-	display: flex;
-	justify-content: flex-end;
-	background-color: #673ab8;
+  display: flex;
+  justify-content: flex-end;
+  background-color: var(--terminal-bg);
 }
 
 header nav {
-	display: flex;
+  display: flex;
 }
 
 header a {
-	color: #fff;
-	padding: 0.75rem;
-	text-decoration: none;
+  color: var(--neon-green);
+  padding: 0.75rem;
+  text-decoration: none;
 }
 
 header a.active {
-	background-color: #0005;
+  background-color: #0005;
 }
 
 header a:hover {
-	background-color: #0008;
+  background-color: #0008;
 }
 
 main {
-	flex: auto;
-	display: flex;
-	align-items: center;
-	max-width: 1280px;
-	margin: 0 auto;
-	text-align: center;
+  flex: auto;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+  background-color: var(--terminal-bg);
 }
 
 @media (max-width: 639px) {
-	main {
-		margin: 2rem;
-	}
+  main {
+    margin: 2rem;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
-	:root {
-		color: #ccc;
-		background-color: #1a1a1a;
-	}
+  :root {
+    --neon-green: #ccc;
+    --terminal-bg: #1a1a1a;
+  }
+}
+
+/* Terminal cursor effect */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  background-color: var(--neon-green);
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
 }

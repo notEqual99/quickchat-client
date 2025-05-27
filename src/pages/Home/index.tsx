@@ -1,32 +1,49 @@
-import preactLogo from '../../assets/preact.svg';
+import { useState } from 'preact/hooks';
 import './style.css';
+import { UsernameForm } from '../../components/UsernameForm';
+import { ChatRoom } from '../../components/ChatRoom';
 
 export function Home() {
-	return (
-		<div class="home">
-			<a href="https://preactjs.com" target="_blank">
-				<img src={preactLogo} alt="Preact logo" height="160" width="160" />
-			</a>
-			<h1>Get Started building Vite-powered Preact Apps </h1>
-			<section>
-				<Resource
-					title="Learn Preact"
-					description="If you're new to Preact, try the interactive tutorial to learn important concepts"
-					href="https://preactjs.com/tutorial"
-				/>
-				<Resource
-					title="Differences to React"
-					description="If you're coming from React, you may want to check out our docs to see where Preact differs"
-					href="https://preactjs.com/guide/v10/differences-to-react"
-				/>
-				<Resource
-					title="Learn Vite"
-					description="To learn more about Vite and how you can customize it to fit your needs, take a look at their excellent documentation"
-					href="https://vitejs.dev"
-				/>
-			</section>
-		</div>
-	);
+	const [username, setUsername] = useState('');
+	const [roomId, setRoomId] = useState('');
+	
+	if (!username) {
+		return <UsernameForm onSetUsername={setUsername} />;
+	}
+	
+	if (!roomId) {
+		return (
+		  <div className="chat-form min-h-screen flex items-center justify-center bg-terminal-bg">
+			<div className="chat-form bg-terminal-bg p-8 rounded-lg shadow-md w-96">
+			  <h1 className=" chat-form text-2xl font-bold mb-6 text-center">Join a Chat Room</h1>
+			  <div className="space-y-4">
+				<div>
+				  <label className="block text-sm font-medium text-gray-700 mb-1">
+					Room Number (1-9999)
+				  </label>
+				  <input
+					type="number"
+					min="1"
+					max="9999"
+					value={roomId}
+					onChange={(e) => setRoomId((e.target as HTMLInputElement).value)}
+					className="w-full px-3 py-2 border border-terminal-accent rounded-md focus:outline-none focus:ring-2 focus:ring-terminal-accent"
+					placeholder="Enter room number"
+				  />
+				</div>
+				<button
+				  onClick={() => roomId && parseInt(roomId) > 0 && parseInt(roomId) <= 9999 && setRoomId(roomId)}
+				  className="w-full bg-terminal-accent/10 text-terminal-accent py-2 px-4 rounded-md hover:bg-terminal-accent/20 focus:outline-none focus:ring-2 focus:ring-terminal-accent focus:ring-offset-2"
+				>
+				  Join Room
+				</button>
+			  </div>
+			</div>
+		  </div>
+		);
+	  }
+	
+	  return <ChatRoom username={username} roomId={roomId} />;
 }
 
 function Resource(props) {
