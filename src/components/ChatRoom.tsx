@@ -4,7 +4,7 @@ import { io, Socket } from 'socket.io-client';
 interface Message {
   username: string;
   text: string;
-  timestamp: number;
+  timestamp: number; 
 }
 
 interface ChatRoomProps {
@@ -20,7 +20,7 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    const newSocket = io(import.meta.env.VITE_REACT_APP_SERVER_URL);
 
     newSocket.on('connect', () => {
       console.log('$ Connected to server');
