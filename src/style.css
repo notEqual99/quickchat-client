@@ -27,44 +27,131 @@ body {
   display: flex;
   min-height: 100vh;
   background-color: var(--terminal-bg);
+  margin-left: 80px; 
+  transition: margin-left 0.3s ease;
 }
 
 header {
-  display: flex;
-  justify-content: flex-end;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
   background-color: var(--terminal-bg);
+  border-right: 1px solid #333;
+  padding: 1rem 0;
+  transition: width 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+header.collapsed {
+  width: 10px;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--neon-green);
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: fixed;
+  left: 80px;
+  top: 10px;
+  transition: all 0.3s ease;
+  background-color: var(--terminal-bg);
+  border: 1px solid #39FF14;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+  transform: translateX(-50%);
+}
+
+header.collapsed .toggle-btn {
+  left: 15px;
+  transform: rotate(180deg) translateX(50%);
+}
+
+.toggle-btn:hover {
+  color: #fff;
+  background-color: rgba(57, 255, 20, 0.3);
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
 }
 
 header nav {
   display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
 }
 
 header a {
+  display: flex;
+  align-items: center;
   color: var(--neon-green);
-  padding: 0.75rem;
+  padding: 0.8rem 0.8rem;
   text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border-left: 3px solid transparent;
 }
 
+header a:hover,
 header a.active {
-  background-color: #0005;
+  background-color: rgba(57, 255, 20, 0.1);
+  border-left: 3px solid var(--neon-green);
 }
 
-header a:hover {
-  background-color: #0008;
+.nav-icon {
+  font-size: 1.2rem;
+  min-width: 30px;
+  display: inline-block;
+  text-align: center;
+}
+
+.nav-text {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+header.collapsed .nav-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  margin: 0;
+  transition: opacity 0.3s ease, width 0.3s ease, margin 0.3s ease;
+}
+
+header.collapsed + main {
+  margin-left: 0px;
 }
 
 main {
-  flex: auto;
-  align-items: center;
-  max-width: 1280px;
-  margin: 0 auto;
-  text-align: center;
-  background-color: var(--terminal-bg);
+  flex: 1;
+  transition: margin-left 0.3s ease;
+}
+
+.toggle-btn {
+  display: none;
 }
 
 @media (max-width: 639px) {
-  main {
-    margin: 2rem;
+  .toggle-btn {
+    display: flex !important;
+  }
+
+  #app {
+    margin-left: 0px;
+  }
+}
+
+@media (min-width: 640px) {
+  .toggle-btn {
+    display: none !important;
   }
 }
 

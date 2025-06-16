@@ -76,14 +76,6 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
 
   return (
     <div className="flex flex-col h-screen bg-terminal-bg text-terminal-text font-mono overflow-hidden">
-      {/* Header */}
-      <header className="border-b border-terminal-accent p-3">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-lg">$ room: <span className="text-terminal-accent">#{roomId}</span></h1>
-          <div className="text-sm">user: <span className="text-terminal-accent">{username}</span></div>
-        </div>
-      </header>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
