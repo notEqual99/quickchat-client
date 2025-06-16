@@ -1,10 +1,16 @@
+import { Router, Route } from 'preact-router';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { UsernameForm } from './components/UsernameForm';
 import { ChatRoom } from './components/ChatRoom';
+import { Header } from './components/Header';
+import Home from './pages/Home';
+import About from './pages/About';
 
 export function App() {
   const [username, setUsername] = useState('');
   const [roomId, setRoomId] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isInvalid, setIsInvalid] = useState(false);
 
@@ -12,6 +18,20 @@ export function App() {
     // Focus the input when component mounts
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 640;
+      setIsMobile(mobile);
+      // Auto-expand when resizing to desktop
+      if (!mobile && isCollapsed) {
+        setIsCollapsed(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isCollapsed]);
 
   const handleJoinRoom = () => {
     const roomNum = parseInt(roomId);
@@ -99,5 +119,18 @@ export function App() {
     );
   }
 
-  return <ChatRoom username={username} roomId={roomId} />;
+  return (
+    <div id="app" className={isCollapsed ? 'collapsed' : ''}>
+      <Header 
+        isCollapsed={isCollapsed} 
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)} 
+      />
+      <main className="flex-1">
+        <Router>
+          <Route path="/" component={() => <Home setRoomId={setRoomId} />} />
+          <Route path="/about" component={About} />
+        </Router>
+      </main>
+    </div>
+  );
 }
