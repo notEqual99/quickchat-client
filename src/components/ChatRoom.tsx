@@ -13,26 +13,34 @@ interface ChatRoomProps {
 }
 
 export function ChatRoom({ username, roomId }: ChatRoomProps) {
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState('');
+  const [typing, setTyping] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_REACT_APP_SERVER_URL);
+    const serverUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
+
+    if (!serverUrl) {
+      console.error('❌ VITE_REACT_APP_SERVER_URL is not defined');
+      return;
+    }
+
+    const newSocket = io(serverUrl, {
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+    });
 
     newSocket.on('connect', () => {
-      console.log('$ Connected to server');
+      setConnectionStatus('connected');
       newSocket.emit('joinRoom', { username, roomId });
     });
 
     newSocket.on('message', (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
-    });
-
-    newSocket.on('roomUsers', (users: string[]) => {
-      console.log('$ Users in room:', users);
     });
 
     setSocket(newSocket);
@@ -47,7 +55,6 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
   }, [messages]);
 
   useEffect(() => {
-    // Focus the input when component mounts
     inputRef.current?.focus();
   }, []);
 
@@ -76,7 +83,21 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
 
   return (
     <div className="flex flex-col h-screen bg-terminal-bg text-terminal-text font-mono overflow-hidden">
-      {/* Messages */}
+      <div className="px-4 py-2 text-xs border-b border-terminal-accent/30">
+        <span className="text-terminal-accent">$</span> Status: 
+        <span className={`ml-2 ${
+          connectionStatus === 'connected' ? 'text-green-400' : 
+          connectionStatus === 'error' ? 'text-red-400' : 'text-yellow-400'
+        }`}>
+          {connectionStatus}
+        </span>
+        {connectionStatus === 'connected' && (
+          <span className="text-terminal-text/50 ml-2">
+            | Room: {roomId} | User: {username}
+          </span>
+        )}
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
           <div className="text-center text-terminal-text/50 mt-8">
@@ -114,13 +135,20 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       <form 
         onSubmit={(e) => {
           e.preventDefault();
           if (message.trim()) {
-            handleSubmit(e);
+            const newMessage: Message & { roomId: string } = {
+              username,
+              text: message.trim(),
+              timestamp: Date.now(),
+              roomId,
+            };
+            socket?.emit('chatMessage', newMessage);
+            setMessage('');
           }
+          setTyping(false);
         }} 
         className="border-t border-terminal-accent p-3"
       >
@@ -130,22 +158,57 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
             ref={inputRef}
             type="text"
             value={message}
-            onChange={(e) => setMessage((e.target as HTMLInputElement).value)}
+            onChange={(e) => {
+              const val = (e.target as HTMLInputElement).value;
+              setMessage(val);
+            }}
             placeholder="Type your message..."
             className="flex-1 bg-transparent border-none focus:outline-none text-terminal-text placeholder-terminal-text/50"
             autoComplete="off"
             onKeyDown={(e) => {
+              const currentValue = (e.target as HTMLInputElement).value;
+              const currentKey = e.key;
+
+              if (currentKey.length === 1 || currentKey === ' ' || currentKey === 'Backspace') {
+                let newValue = currentValue;
+                if (currentKey === 'Backspace') {
+                  newValue = currentValue.slice(0, -1);
+                } else {
+                  newValue = currentValue + currentKey;
+                }
+                setTyping(true);
+
+                if (newValue === "") {
+                  setTyping(false);
+                }
+              }
+
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (message.trim()) {
-                  handleSubmit(e);
+                const input = e.target as HTMLInputElement;
+                const messageText = input.value;
+                
+                if (messageText !== '') {
+                  const newMessage: Message & { roomId: string } = {
+                    username,
+                    text: messageText,
+                    timestamp: Date.now(),
+                    roomId,
+                  };
+                  socket?.emit('chatMessage', newMessage);
+                  setMessage('');
+                  setTyping(false);
                 }
               }
             }}
           />
           <button
             type="submit"
-            className="bg-terminal-accent/10 text-terminal-accent px-4 py-1 border border-terminal-accent hover:bg-terminal-accent/20 focus:outline-none disabled:opacity-50"
+            className={`px-4 py-1 border focus:outline-none transition-colors ${
+              typing
+                ? 'bg-terminal-accent/60 text-white border-terminal-accent cursor-pointer hover:bg-terminal-accent/90 active:bg-terminal-accent/80'
+                : 'bg-terminal-accent/10 text-terminal-accent/50 border-terminal-accent/30'
+            }`}
             disabled={!message.trim()}
           >
             send
