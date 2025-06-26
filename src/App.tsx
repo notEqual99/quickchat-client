@@ -1,10 +1,10 @@
 import { Router, Route } from 'preact-router';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { UsernameForm } from './components/UsernameForm';
-import { ChatRoom } from './components/ChatRoom';
 import { Header } from './components/Header';
-import Home from './pages/Home';
+import { Home } from './pages/Home';
 import About from './pages/About';
+import { Chat } from './pages/Chat';
 
 export function App() {
   const [username, setUsername] = useState('');
@@ -129,6 +129,7 @@ export function App() {
         <Router>
           <Route path="/" component={() => <Home setRoomId={setRoomId} />} />
           <Route path="/about" component={About} />
+          <Route path="/chat/:roomId" component={Chat} />
         </Router>
       </main>
     </div>
