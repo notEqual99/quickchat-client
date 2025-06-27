@@ -18,7 +18,7 @@ export function Home() {
 	};
 
   const handleJoinRoomKeyDown = (inputValue: string) => {
-    if (!inputValue) {
+    if (!inputValue || isNaN(parseInt(inputValue)) || parseInt(inputValue) < 1 || parseInt(inputValue) > 9999) {
       alert('Please enter a valid room number between 1 and 9999');
 			return;
     }
@@ -43,14 +43,27 @@ export function Home() {
               min="1"
               max="9999"
               value={roomId}
-              onChange={(e) => setRoomId((e.target as HTMLInputElement).value)}
+              onChange={(e) => {
+                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                setRoomId(numericValue);
+              }}
               className="w-full px-3 py-2 border border-terminal-accent rounded-md focus:outline-none focus:ring-2 focus:ring-terminal-accent"
               placeholder="Enter room number"
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.', ','].includes(e.key)) {
+                  e.preventDefault();
+                }
+
                 if (e.key === 'Enter') {
                   const currentInputValue = (e.target as HTMLInputElement).value;
-									handleJoinRoomKeyDown(currentInputValue);
+                  handleJoinRoomKeyDown(currentInputValue);
                 }
+              }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const paste = e.clipboardData.getData('text');
+                const numericPaste = paste.replace(/[^0-9]/g, '');
+                setRoomId(numericPaste);
               }}
             />
           </div>

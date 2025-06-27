@@ -18,6 +18,8 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
   const [message, setMessage] = useState('');
   const [typing, setTyping] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [activeUsers, setActiveUsers] = useState<string[]>([]);
+  const [roomStats, setRoomStats] = useState<{userCount: number; activeUsers: string[]}>({userCount: 0, activeUsers: []});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +43,20 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
 
     newSocket.on('message', (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
+    });
+
+    newSocket.on('roomStats', (data: {userCount: number; activeUsers: string[]}) => {
+      setRoomStats(data);
+      setActiveUsers(data.activeUsers);
+    });
+
+    newSocket.on('disconnect', () => {
+      setConnectionStatus('disconnected');
+      setActiveUsers([]); // Clear active users on disconnect
+    });
+
+    newSocket.on('connect_error', () => {
+      setConnectionStatus('error');
     });
 
     setSocket(newSocket);
@@ -81,6 +97,15 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const handleLeaveRoom = () => {
+    if (window.confirm('Are you sure you want to leave the chat room?')) {
+      socket?.emit('leaveRoom', { username, roomId });
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-terminal-bg text-terminal-text font-mono overflow-hidden">
       <div className="px-4 py-2 text-xs border-b border-terminal-accent/30">
@@ -93,9 +118,26 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
         </span>
         {connectionStatus === 'connected' && (
           <span className="text-terminal-text/50 ml-2">
-            | Room: {roomId} | User: {username}
+            | Room: {roomId} | Name: {username}
           </span>
         )}
+        <span className="ml-2">
+          | Active: <span className="text-terminal-accent">{roomStats.userCount}</span>
+          {/* {roomStats.activeUsers.length > 0 && (
+            <span className="text-terminal-text/40 ml-1">
+              ({roomStats.activeUsers.join(', ')})
+            </span>
+          )} */}
+        </span>
+        <span className="ml-2">
+          | <button 
+              onClick={handleLeaveRoom}
+              className="text-red-400 hover:text-red-300 transition-colors"
+              title="Leave room"
+            >
+              Leave Room
+            </button>
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -107,19 +149,27 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
           messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex ${msg.username === username ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${
+                msg.username === username ? 'justify-end' : 
+                msg.username === 'System' ? 'justify-center' : 'justify-start'
+              }`}
             >
               <div
                 className={`max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl px-4 py-2 border ${
                   msg.username === username
                     ? 'border-terminal-accent text-terminal-text rounded-l-lg rounded-tr-lg'
+                    : msg.username === 'System'
+                    ? 'border-yellow-400/30 text-yellow-400/80 rounded-lg bg-yellow-400/5'
                     : 'border-terminal-text/30 text-terminal-text/80 rounded-r-lg rounded-tl-lg'
                 }`}
               >
                 <div className="text-xs mb-1">
                   <span className="text-terminal-accent">$</span>{' '}
-                  <span className={msg.username === username ? 'text-terminal-accent' : 'text-terminal-text/80'}>
-                    {msg.username === username ? 'you' : msg.username}
+                  <span className={
+                    msg.username === username ? 'text-terminal-accent' : 
+                    msg.username === 'System' ? 'text-yellow-400' : 'text-terminal-text/80'
+                  }>
+                    {msg.username === username ? 'you' : msg.username.toLowerCase()}
                   </span>
                   <span className="text-terminal-text/50"> @ {formatTime(msg.timestamp)}</span>
                 </div>
