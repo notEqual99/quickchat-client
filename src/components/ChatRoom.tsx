@@ -20,8 +20,10 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
   const [roomStats, setRoomStats] = useState<{userCount: number; activeUsers: string[]}>({userCount: 0, activeUsers: []});
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const serverUrl = import.meta.env.VITE_REACT_APP_SERVER_URL;
@@ -52,19 +54,66 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
 
     newSocket.on('disconnect', () => {
       setConnectionStatus('disconnected');
-      setActiveUsers([]); // Clear active users on disconnect
+      setActiveUsers([]);
     });
 
     newSocket.on('connect_error', () => {
       setConnectionStatus('error');
     });
 
+    newSocket.on('reconnect', () => {
+      setConnectionStatus('connected');
+      newSocket.emit('joinRoom', { username, roomId });
+    });
+
     setSocket(newSocket);
 
     return () => {
+      if (newSocket.connected) {
+        newSocket.emit('leaveRoom', { username, roomId });
+      }
       newSocket.disconnect();
     };
   }, [username, roomId]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (socket && socket.connected) {
+        socket.emit('leaveRoom', { username, roomId });
+        socket.disconnect();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // const handleVisibilityChange = () => {
+    //   if (document.hidden) {
+    //     console.log('User left the page/tab');
+    //   } else {
+    //     console.log('User returned to the page/tab');
+    //     if (socket && !socket.connected) {
+    //       socket.connect();
+    //     }
+    //   }
+    // };
+
+    // document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [socket, username, roomId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -99,16 +148,23 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
 
   const handleLeaveRoom = () => {
     if (window.confirm('Are you sure you want to leave the chat room?')) {
-      socket?.emit('leaveRoom', { username, roomId });
+      if (socket && socket.connected) {
+        socket.emit('leaveRoom', { username, roomId });
+      }
       setTimeout(() => {
         window.location.href = '/';
       }, 100);
     }
   };
 
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-terminal-bg text-terminal-text font-mono overflow-hidden">
-      <div className="px-4 py-2 text-xs border-b border-terminal-accent/30">
+      <div className="status-bar px-4 py-2 text-xs border-b border-terminal-accent/30">
         <span className="text-terminal-accent">$</span> Status: 
         <span className={`ml-2 ${
           connectionStatus === 'connected' ? 'text-green-400' : 
@@ -122,12 +178,31 @@ export function ChatRoom({ username, roomId }: ChatRoomProps) {
           </span>
         )}
         <span className="ml-2">
-          | Active: <span className="text-terminal-accent">{roomStats.userCount}</span>
-          {/* {roomStats.activeUsers.length > 0 && (
-            <span className="text-terminal-text/40 ml-1">
-              ({roomStats.activeUsers.join(', ')})
-            </span>
-          )} */}
+          <span 
+            className="cursor-pointer hover:text-terminal-accent transition-colors"
+            onClick={toggleDropdown}
+            title="Show active users"
+          >
+            | Active: <span className="text-terminal-accent">{roomStats.userCount}</span>
+          </span>
+          {isDropdownOpen && roomStats.activeUsers.length > 0 && (
+            <div 
+              ref={dropdownRef}
+              className="absolute mt-1 ml-1 bg-terminal-bg border border-terminal-accent/30 rounded shadow-lg z-50 max-h-40 overflow-y-auto"
+            >
+              <ul className="py-1 text-sm">
+                <li className="px-3 py-1 text-terminal-text/80">Active Users:</li>
+                {roomStats.activeUsers.map((user, index) => (
+                  <li 
+                    key={index}
+                    className="px-3 py-1 hover:bg-terminal-accent/10 text-terminal-text/80"
+                  >
+                    {user}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </span>
         <span className="ml-2">
           | <button 
