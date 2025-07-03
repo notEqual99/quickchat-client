@@ -2,9 +2,11 @@ import { useState } from 'preact/hooks';
 
 interface UsernameFormProps {
   onSetUsername: (username: string) => void;
+  roomId: string;
+  onBack: () => void;
 }
 
-export function UsernameForm({ onSetUsername }: UsernameFormProps) {
+export function UsernameForm({ onSetUsername, roomId, onBack }: UsernameFormProps) {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
 
@@ -23,11 +25,14 @@ export function UsernameForm({ onSetUsername }: UsernameFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="border border-terminal-accent p-6 w-full max-w-2xl">
         <h1 className="text-2xl font-mono text-terminal-text mb-6 text-center">
           $ welcome_to_quickchat.sh
         </h1>
+        <div className="text-center">
+          <p className="mt-4 text-sm text-gray-600">Room: {roomId}</p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="username" className="block text-sm font-mono text-terminal-text mb-2">
@@ -47,6 +52,7 @@ export function UsernameForm({ onSetUsername }: UsernameFormProps) {
                 placeholder="username"
                 autoComplete="off"
                 maxLength={20}
+                autoFocus
               />
             </div>
             {error && (
@@ -60,6 +66,13 @@ export function UsernameForm({ onSetUsername }: UsernameFormProps) {
             className="w-full bg-terminal-accent/10 text-terminal-accent py-2 px-4 font-mono hover:bg-terminal-accent/20 focus:outline-none focus:ring-1 focus:ring-terminal-accent"
           >
             $ ./start_chat
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full bg-gray-500/10 text-gray-600 py-2 px-4 font-mono hover:bg-gray-500/20 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          >
+            $ cd ../room_selection
           </button>
         </form>
       </div>
