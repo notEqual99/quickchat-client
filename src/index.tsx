@@ -5,6 +5,7 @@ import { Header } from './components/Header.jsx';
 import { Home } from './pages/Home/index.jsx';
 import About from './pages/About/index.js';
 import { Chat } from './pages/Chat/index.jsx';
+import { NotFound } from './pages/_404';
 import './style.css';
 
 export function App() {
@@ -16,6 +17,7 @@ export function App() {
           <Route path="/" component={Home} />
           <Route path="/about" component={About} />
           <Route path="/chat/:roomId" component={Chat} />
+          <Route default component={NotFound} />
         </Router>
       </main>
     </LocationProvider>
