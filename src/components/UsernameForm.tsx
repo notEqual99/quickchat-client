@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import { io } from 'socket.io-client';
 
 interface UsernameFormProps {
   onSetUsername: (username: string) => void;
@@ -9,6 +10,27 @@ interface UsernameFormProps {
 export function UsernameForm({ onSetUsername, roomId, onBack }: UsernameFormProps) {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const pendingUsernameRef = useRef('');
+
+  useEffect(() => {
+    const newSocket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:3000');
+    setSocket(newSocket);
+
+    newSocket.on('usernameValidation', (data) => {
+      setIsValidating(false);
+      if (data.valid) {
+        onSetUsername(pendingUsernameRef.current);
+      } else {
+        setError(data.error);
+      }
+    });
+
+    return () => {
+      newSocket.close();
+    };
+  }, [onSetUsername]);
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
@@ -21,7 +43,20 @@ export function UsernameForm({ onSetUsername, roomId, onBack }: UsernameFormProp
       setError('Username must be between 3 and 20 characters');
       return;
     }
-    onSetUsername(trimmedUsername);
+    
+    if (!socket) {
+      setError('Connection error. Please try again.');
+      return;
+    }
+
+    setIsValidating(true);
+    setError('');
+    pendingUsernameRef.current = trimmedUsername;
+
+    socket.emit('validateUsername', {
+      username: trimmedUsername,
+      roomId: roomId
+    });
   };
 
   return (
@@ -63,9 +98,14 @@ export function UsernameForm({ onSetUsername, roomId, onBack }: UsernameFormProp
           </div>
           <button
             type="submit"
-            className="w-full bg-terminal-accent/10 text-terminal-accent py-2 px-4 font-mono hover:bg-terminal-accent/20 focus:outline-none focus:ring-1 focus:ring-terminal-accent"
+            disabled={isValidating}
+            className={`w-full py-2 px-4 font-mono focus:outline-none focus:ring-1 focus:ring-terminal-accent ${
+              isValidating 
+                ? 'bg-gray-500/10 text-gray-500 cursor-not-allowed' 
+                : 'bg-terminal-accent/10 text-terminal-accent hover:bg-terminal-accent/20'
+            }`}
           >
-            $ ./start_chat
+            {isValidating ? '$ validating...' : '$ ./start_chat'}
           </button>
           <button
             type="button"

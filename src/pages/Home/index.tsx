@@ -5,7 +5,7 @@ import { UsernameForm } from '../../components/UsernameForm';
 export function Home() {
 	const [username, setUsername] = useState('');
 	const [roomId, setRoomId] = useState('');
-	const [step, setStep] = useState('room');
+	const [step, setStep] = useState('room'); 
 	
 	const handleRoomSubmit = () => {
 		const trimmedRoomId = roomId.trim();
@@ -16,14 +16,6 @@ export function Home() {
 			return;
 		}
 		setStep('username');
-	};
-
-	const handleRoomKeyDown = (inputValue: string) => {
-		if (!inputValue || isNaN(parseInt(inputValue)) || parseInt(inputValue) < 1 || parseInt(inputValue) > 9999) {
-      alert('Please enter a valid room number between 1 and 9999');
-			return;
-    }
-    setStep('username');
 	};
 
 	const handleUsernameSet = (newUsername) => {
@@ -39,7 +31,7 @@ export function Home() {
 		return (
 			<div className="chat-form min-h-screen flex items-center justify-center bg-terminal-bg">
 				<div className="chat-form bg-terminal-bg p-8 rounded-lg shadow-md w-96">
-					<h1 className="chat-form text-2xl font-bold mb-6 text-center">Enter Chat Room Number</h1>
+					<h1 className="chat-form text-2xl font-bold mb-6 text-center">Enter Room Number</h1>
 					<div className="space-y-4">
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-1">
@@ -61,8 +53,7 @@ export function Home() {
 										e.preventDefault();
 									}
 									if (e.key === 'Enter') {
-                    const currentInputValue = (e.target as HTMLInputElement).value;
-                    handleRoomKeyDown(currentInputValue);
+										handleRoomSubmit();
 									}
 								}}
 								onPaste={(e) => {
