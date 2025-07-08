@@ -15,7 +15,7 @@ export function UsernameForm({ onSetUsername, roomId, onBack }: UsernameFormProp
   const pendingUsernameRef = useRef('');
 
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:3000');
+    const newSocket = io(import.meta.env.VITE_REACT_APP_SERVER_URL);
     setSocket(newSocket);
 
     newSocket.on('usernameValidation', (data) => {
